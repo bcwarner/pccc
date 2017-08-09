@@ -2,17 +2,21 @@
 #include <stdio.h>
 #include "c.tab.h"
 /*
-[^\n]*				return TOKEN_FILE;
 (\".*\"|\S)*		return TOKEN_SEQUENCE;
+[^\n]*				return TOKEN_FILE;
 */
 %}
 
+%prefix pccc_lp_c
+
 %%
 
-(auto|register|static|extern|typedef) 	 { printf("TOKEN_STORAGE_CLASS_SPECIFIER"); return TOKEN_STORAGE_CLASS_SPECIFIER; }
-(void|char|short|int|long|float|double|signed|unsigned)	{ printf("TOKEN_TYPE_SPECIFIER"); return TOKEN_TYPE_SPECIFIER; }
-(const|volatile)	{ printf("TOKEN_TYPE_QUALIFIER"); return TOKEN_TYPE_QUALIFIER; }
-(struct|union)		{ printf("TOKEN_STRUCT_OR_UNION"); return TOKEN_STRUCT_OR_UNION; }
+"/*"				yycomment("*/");
+"//".*\n 			;
+(auto|register|static|extern|typedef) 	return TOKEN_STORAGE_CLASS_SPECIFIER;
+(void|char|short|int|long|float|double|signed|unsigned)	return TOKEN_TYPE_SPECIFIER;
+(const|volatile)	return TOKEN_TYPE_QUALIFIER;
+(struct|union)		return TOKEN_STRUCT_OR_UNION;
 enum				return TOKEN_ENUM;
 case				return TOKEN_CASE;
 default				return TOKEN_DEFAULT;
@@ -29,7 +33,7 @@ return				return TOKEN_RETURN;
 sizeof				return TOKEN_SIZEOF;
 define				return TOKEN_DEFINE;
 include				return TOKEN_INCLUDE;
-(\=|\*\=|\/=|\%\=|\+\=|\-\=|\<\<\=|\>\>\=|\&\=|\^\=|\|\=) return TOKEN_ASSIGNMENT;
+(\=|\*\=|\/=|\%\=|\+\=|\-\=|\<\<\=|\>\>\=|\&\=|\^\=|\|\=) return TOKEN_ASSIGNMENT; // Split up.
 "..."				return TOKEN_ELLIPSIS;
 "||"				return TOKEN_LOGICAL_OR;
 "&&"				return TOKEN_LOGICAL_AND;
@@ -42,12 +46,12 @@ include				return TOKEN_INCLUDE;
 "<<"				return TOKEN_LSHIFT;
 "!="				return TOKEN_NOT_EQUAL;
 "<="				return TOKEN_LTE;
-(\&|\*|\+|\-|\~|\!)	return TOKEN_UNARY_OP;
+(\&|\*|\+|\-|\~|\!)	return TOKEN_UNARY_OP; // Split up.
 [a-zA-Z\_][a-zA-Z0-9\_]* return TOKEN_IDENTIFIER;
 \".*\"				return TOKEN_STRING;
 (0x|0|0X)?[0-9A-Fa-f]*(u|U|l|L)? return TOKEN_INTEGER;
 L?\'(\\\'|\\[^\\\']*|.)\'	return TOKEN_CHARACTER;
 [0-9]*\.?[0-9]*(e[0-9]*)?(f|F|l|L)?	return TOKEN_FLOATING;
-
+. 					{}
 
 %%
