@@ -1,6 +1,12 @@
-#include "macro.h"
-#include "st.h"
+#include "macros.h"
+#include "types.h"
 #include "buffer.h"
+#include "st.h"
+#include "lp.h"
+#include "pccc.h"
+
+#include <stdlib.h>
+#include <pthread.h>
 
 // Creates the context for the program. Takes an array of buffers.
 pccc_context* 
@@ -9,13 +15,16 @@ pccc_init(pccc_buffer ** buf, int n){
 	pccc_context * ctxt = PCCC_MALLOC(pccc_context, 1);
 	ctxt->buffers = pccc_st_init();
 	ctxt->parent_keys = pccc_st_init();
-	
+	ctxt->threads = pccc_st_init();
+	ctxt->symbols = pccc_st_init();
+
 	// Move the buffers into the symbol table.
 	for (int i = 0; i < n; i++){
 		pccc_st_set(ctxt->buffers, buf[i]->name, buf[i]);
 	}
 
 	// Assign the appropriate lexer/parser.
+	return ctxt;
 }
 
 // Analyzes a string. Returns an array with all possible symbols.
@@ -28,24 +37,27 @@ pccc_suggest(pccc_context* ctxt, char *s){
 	// If reversed tokens_1 == whitespace => suggest from a prefix.
 
 	// If reversed tokens_1 suggests the 0th token is a chiled => suggest from a parent/child table.
+	return NULL;
 }
 
 // Analyzes a string without any preceding tokens. Returns an array with all possible symbols.
 pccc_suggestions*
 pccc_suggest_prefix(pccc_context* ctxt, char *s){
+	// We don't need to lock here
+
 	// Search the trie for relevant symbols.
 
 	// Return values.
+	return NULL;
 }
 
 // Adds a buffer
 void
-pccc_add_buffer(pccc_context *ctxt, char *name, char *contents, int len, int flags){
+pccc_add_buffer(pccc_context *ctxt, pccc_buffer *buf){
 	// Initialize the buffer.
-	pccc_buffer_init()
 
 	// Add the buffer to the symbol table.
-	pccc_st_set(cxt->buffers, buf->name, (void *)buf);
+	pccc_st_set(ctxt->buffers, buf->name, (void *)buf);
 }
 
 pccc_buffer* 
@@ -62,18 +74,48 @@ pccc_update_buffer(pccc_context *ctxt, char *name, char *contents, int len){
 	pccc_buffer_update(b, contents, len);
 }
 
+struct pccc_analysis_args {
+	pccc_context *ctxt;
+	pccc_buffer *buf;
+};
+
+void*
+pccc_analyze_async(void *a){
+	// Lock the buffer.
+	struct pccc_analysis_args *args = (struct pccc_analysis_args *)a;
+	pthread_mutex_lock(args->buf->mutex);
+
+	// Select an analyzer based upon file name.
+
+	pccc_lp * lp = pccc_select_lp(args->buf->name); 
+
+	// Call the parser using these args.
+	lp->analyze(args->ctxt, args->buf);
+
+	// Exit the thread.
+	pthread_mutex_unlock(args->buf->mutex);
+	return NULL;
+}
+
 // Analyzes a buffer asynchronously. Returns if it succeeded. Note that the API will pay attention to the address and whether it has already been analyzed as a buffer.
-void
+int
 pccc_analyze(pccc_context* ctxt, pccc_buffer *buf){
 	// Create the thread.
+	pthread_t *thread = PCCC_MALLOC(pthread_t, 1);
+	struct pccc_analysis_args *args = PCCC_MALLOC(struct pccc_analysis_args, 1);
+	args->ctxt = ctxt;
+	args->buf = buf;
 
-	// Pass the analysis to the thread.
+	pccc_st_set(ctxt->threads, buf->name, thread); // Add the thread to the threads ST.
+	pthread_create(thread, NULL, &pccc_analyze_async, (void *)args);// Pass the analysis to the thread.
+	return PCCC_SUCCESS;
 }
 
 // Analyzes all buffers asynchronously. Returns if it succeeded. Note that the API will pay attention to the address and whether it has already been analyzed as a buffer.
-void
+int
 pccc_analyze_all(pccc_context* ctxt){
 	// Create the thread.
 
 	// Pass the analysis to the thread.
+	return PCCC_SUCCESS;
 }

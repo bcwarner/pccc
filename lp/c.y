@@ -4,12 +4,16 @@ Uses the definition found in K&R C, 2nd Edition, pg. 234-239, with several adjus
 Crossreferenced against: https://www.lysator.liu.se/c/ANSI-C-grammar-y.html
 */
 %{
-	#include <stdio.h>
-	#include <string.h>
+	//#pragma once
+	//#include <stdio.h>
+	//#include <string.h>
+	//#include <stdlib.h>
+	#include "../pccc.h"
+	#include "../types.h"
 	 
-	void main(){
-		yyparse();
-	}
+	/*void main(){
+		pccc_lp_cparse();
+	}*/
 
 	void yyerror(const char *str)
 	{
@@ -29,8 +33,8 @@ Crossreferenced against: https://www.lysator.liu.se/c/ANSI-C-grammar-y.html
 %printer { fprintf(stdout, "Parsed: %s", $$); } <*>
 
 // yyparse info
-%parse-param {pccc_context *ctxt}
-%define api.prefix {pccc_lp_c}
+//%parse-param {pccc_context *ctxt}
+//%define api.prefix {pccc_lp_c}
 
 %token TOKEN_STORAGE_CLASS_SPECIFIER;
 %token TOKEN_TYPE_SPECIFIER;
@@ -380,6 +384,7 @@ function_definition: declaration_specifiers declarator declaration_list compound
 				; // Do stuff here for pccc
 
 
+/*
 control_line: '#' define
 			| '#' include
 			;
@@ -389,3 +394,4 @@ define: TOKEN_DEFINE TOKEN_SEQUENCE TOKEN_SEQUENCE;
 include: TOKEN_INCLUDE '<' TOKEN_FILE '>'
 			| TOKEN_INCLUDE '"' TOKEN_FILE '"'
 			;
+*/

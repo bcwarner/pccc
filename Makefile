@@ -1,18 +1,32 @@
-TARGETS=lib sublime
-CFLAGS=-Wall
-DFLAGS=-g
+CFLAGS=-Wall -pthread -fpic
+LIBFLAGS=-pthread -shared -fpic
+DFLAGS=-g -D DEBUG
 SRC=$(wildcard *.c)
-OBJ=$(patsubst %.c,%.o,$(SRCS))
+OBJ=$(SRC:%.c=%.o) lp/c.tab.o lp/c.yy.o
 CC=gcc
 
-%.o: %.c $(wildcard %.h)
-	$(CC) $(CFLAGS) -o $@ $< 
+#ensures command cannot fail
 
-lib: $(OBJ)
-	gcc -o $
+all: lib test
+
+lp/lp.o:
+	cd lp; make
+	cd ..
+
+%.o: %.c %.h
+	-$(CC) $(CFLAGS) $(DFLAGS) -c $< 
+
+lib: lp/lp.o $(OBJ) 
+	$(CC) $(LIBFLAGS) $(DFLAGS) -o pccc.so $(OBJ)
+
+plugins:
+
+test: lib
+
+release:
 
 clean:
-	rm -f *.o
-	rm -f *.yy.c
-	rm -f *.tab.c
-	rm -f *.tab.h
+	find . -name '*.o' -delete
+	find . -name '*.yy.c' -delete
+	find . -name '*.tab.c' -delete
+	find . -name '*.tab.h' -delete

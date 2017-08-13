@@ -1,17 +1,25 @@
 %{
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "c.tab.h"
 /*
 (\".*\"|\S)*		return TOKEN_SEQUENCE;
 [^\n]*				return TOKEN_FILE;
 */
+//%option prefix="pccc_lp_c" Removed because it causes issues.
 %}
 
-%prefix pccc_lp_c
+
+
+%option nounistd
+%option never-interactive
 
 %%
 
-"/*"				yycomment("*/");
+
+
+"/*".*"*/"			;
 "//".*\n 			;
 (auto|register|static|extern|typedef) 	return TOKEN_STORAGE_CLASS_SPECIFIER;
 (void|char|short|int|long|float|double|signed|unsigned)	return TOKEN_TYPE_SPECIFIER;

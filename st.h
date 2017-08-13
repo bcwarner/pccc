@@ -8,19 +8,16 @@ Use the prefix pccc_st_ since we may want to change the symbol table type later,
 #include <string.h>
 
 #include "macros.h"
+#include "types.h"
 
-typedef struct pccc_st_node {
-	char * key;
-	void * val;
-	pccc_st_node* l;
-	pccc_st_node* r;
-	// int N; Not applicable
-} pccc_st_node;
+pccc_linked_list*
+pccc_linked_list_create();
 
-typedef struct pccc_st {
-	pccc_st_node* root;
-	// int N; Not applicable
-} pccc_st;
+void
+pccc_linked_list_add(pccc_linked_list *list, void * val, size_t size);
+
+void **
+pccc_linked_list_array(pccc_linked_list *list);
 
 pccc_st* 
 pccc_st_init();
@@ -29,15 +26,18 @@ pccc_st_node* // Double pointer gives access to the node in memory, but the actu
 pccc_st_search(pccc_st* t, char * key);
 
 pccc_st_node*
-pccc_st_search_node(pccc_st_node* node, char * key, size_t len);
+pccc_st_search_node(pccc_st_node* node, char *key, size_t len, unsigned int i);
 
 void
 pccc_st_set(pccc_st *t, char *key, void *val);
 
 pccc_st_node*
-pccc_st_set_node(pccc_st_node* node, char * key, void * val);
+pccc_st_set_node(pccc_st_node* node, char * key, void * val, size_t len, unsigned int i);
 
+pccc_linked_list* // Do not change to *void[] since endpoint needs to know size of array.
+pccc_st_search_prefix(pccc_st* t, char * key);
 
-
+void
+pccc_st_search_prefix_node(pccc_st_node *node, char *key, size_t len, pccc_linked_list *list);
 
 
