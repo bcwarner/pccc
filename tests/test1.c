@@ -6,6 +6,8 @@
 #include "../lp.h"
 
 #include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 
 int
 main(int argc, char *argv[]){
@@ -39,12 +41,13 @@ main(int argc, char *argv[]){
 
 	// Iterate through the data.
 
-	printf("Searching for all symbols.\n");
-	pccc_linked_list *l = pccc_st_search_prefix(ctxt->symbols, "");
-	char **array = (char **)pccc_linked_list_array(l);
+	printf("Search for a symbol:");
+	char s[10];
+	scanf("%9s", s);
+	pccc_suggestions *sug = pccc_suggest_prefix(ctxt, s);
 
-	for (int i = 0; i < l->N; i++)
-		printf("Result %d: \t %s\n", i, array[i]);
+	for (int i = 0; i < sug->N; i++)
+		printf("Result %d: \t %s\n", i, sug->suggestions[i]);
 
 	// Collect the data.
 	//pccc_suggest(ctxt, "foo");

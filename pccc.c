@@ -14,9 +14,9 @@ pccc_init(pccc_buffer ** buf, int n){
 	// Create the context.
 	pccc_context * ctxt = PCCC_MALLOC(pccc_context, 1);
 	ctxt->buffers = pccc_st_init();
-	ctxt->parent_keys = pccc_st_init();
 	ctxt->threads = pccc_st_init();
 	ctxt->symbols = pccc_st_init();
+	ctxt->parent_child = pccc_st_init();
 
 	// Move the buffers into the symbol table.
 	for (int i = 0; i < n; i++){
@@ -36,7 +36,7 @@ pccc_suggest(pccc_context* ctxt, char *s){
 
 	// If reversed tokens_1 == whitespace => suggest from a prefix.
 
-	// If reversed tokens_1 suggests the 0th token is a chiled => suggest from a parent/child table.
+	// If reversed tokens_1 suggests the 0th token is a child => suggest from a parent/child table.
 	return NULL;
 }
 
@@ -46,9 +46,13 @@ pccc_suggest_prefix(pccc_context* ctxt, char *s){
 	// We don't need to lock here
 
 	// Search the trie for relevant symbols.
+	pccc_linked_list *l = pccc_st_search_prefix(ctxt->symbols, s);
+
+	// Convert the values from a linked list into a series of suggestions.
+	pccc_suggestions *r = pccc_suggestionize(l);
 
 	// Return values.
-	return NULL;
+	return r;
 }
 
 // Adds a buffer

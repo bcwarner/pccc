@@ -382,16 +382,3 @@ function_definition: declaration_specifiers declarator declaration_list compound
 				| declaration_specifiers declarator compound_statement
 				| declarator declarator compound_statement
 				; // Do stuff here for pccc
-
-
-/*
-control_line: '#' define
-			| '#' include
-			;
-
-define: TOKEN_DEFINE TOKEN_SEQUENCE TOKEN_SEQUENCE;
-
-include: TOKEN_INCLUDE '<' TOKEN_FILE '>'
-			| TOKEN_INCLUDE '"' TOKEN_FILE '"'
-			;
-*/

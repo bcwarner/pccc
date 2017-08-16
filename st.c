@@ -21,7 +21,7 @@ pccc_linked_list_add(pccc_linked_list *list, void * val, size_t size){
 	pccc_linked_list_node *node = PCCC_MALLOC(pccc_linked_list_node, 1);
 	
 	// Allocate the memory for the item.
-	node->val = PCCC_MALLOC(void, size);
+	node->val = calloc(sizeof(void), size);
 	memcpy(node->val, val, size);
 
 	// Extend the linked list. Increment N.
@@ -47,6 +47,15 @@ pccc_linked_list_array(pccc_linked_list *list){
 	return array;
 }
 
+// Converts a linked list of symbols into an array of symbols encapsulated in the pccc_suggestions struct.
+pccc_suggestions *
+pccc_suggestionize(pccc_linked_list *list){
+	pccc_suggestions *sug = PCCC_MALLOC(pccc_suggestions, 1);
+	sug->suggestions = (char **)pccc_linked_list_array(list);
+	sug->N = list->N;
+	return sug;
+}
+
 pccc_st*
 pccc_st_init(){
 	// Allocate the root, then the table.
@@ -65,7 +74,7 @@ pccc_st_search_node(pccc_st_node* node, char *key, size_t len, unsigned int i){
 		return NULL;
 	if (len == i) // Match.
 		return node;
-	return pccc_st_search_node(node->next[(int)key[i]], key, len, i + 1);
+	return pccc_st_search_node(node->next[(unsigned int)key[i]], key, len, i + 1);
 }
 
 pccc_linked_list* // Do not change to *void[] since endpoint needs to know size of array.
@@ -74,7 +83,8 @@ pccc_st_search_prefix(pccc_st* t, char * key){
 	pccc_linked_list *l = pccc_linked_list_create();
 
 	// Search
-	pccc_st_search_prefix_node(t->root, key, strlen(key), l);
+	pccc_st_node* root = pccc_st_search(t, key);
+	pccc_st_search_prefix_node(root, key, strlen(key), l);
 
 	return l;
 }
@@ -83,7 +93,9 @@ void
 pccc_st_search_prefix_node(pccc_st_node *node, char *key, size_t len, pccc_linked_list *list){
 	if (node == NULL)
 		return;
-	if (node->val != NULL) pccc_linked_list_add(list, key, len + 1); // Add the node to the queue.
+	if (node->val != NULL){
+		pccc_linked_list_add(list, key, len + 1);
+	} // Add the node to the queue.
 	// Iterate through the next array and find matches. Create new strings for them.
 	size_t new_strlen = len + 1;
 	for (int c = 0; c < PCCC_RADIX; c++){

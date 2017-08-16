@@ -24,3 +24,8 @@
 #else
 	#define PCCC_PRINTF(str)
 #endif
+
+// C Regex
+
+#define PCCC_C_LP_DEFINE "\\#define\\s*(\\S*)\\s*(\\S*)?" // We have define as a capturing group to differentiate between defines.
+#define PCCC_C_LP_INCLUDE "\\#include\\s*[\"<]\\s*([a-zA-Z0-9.,\\\\\\/_]*)\\s*[\">]"

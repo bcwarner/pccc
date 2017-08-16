@@ -19,6 +19,9 @@ pccc_linked_list_add(pccc_linked_list *list, void * val, size_t size);
 void **
 pccc_linked_list_array(pccc_linked_list *list);
 
+pccc_suggestions *
+pccc_suggestionize(pccc_linked_list *list);
+
 pccc_st* 
 pccc_st_init();
 
