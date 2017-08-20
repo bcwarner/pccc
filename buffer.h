@@ -15,3 +15,6 @@ pccc_buffer_init(char *name, char *contents, size_t len, unsigned int flags);
 
 void
 pccc_buffer_update(pccc_buffer *buf, char *contents, size_t len);
+
+char *
+pccc_buffer_get_folder(char *name, size_t *length);

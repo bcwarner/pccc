@@ -64,6 +64,12 @@ pccc_add_buffer(pccc_context *ctxt, pccc_buffer *buf){
 	pccc_st_set(ctxt->buffers, buf->name, (void *)buf);
 }
 
+void
+pccc_add_new_buffer(pccc_context *ctxt, char *name, char *contents, int len, int flags){
+	pccc_buffer *buf = pccc_buffer_init(name, contents, len, flags);
+	pccc_st_set(ctxt->buffers, buf->name, (void *)buf);
+}
+
 pccc_buffer* 
 pccc_get_buffer(pccc_context *ctxt, char *name){
 	return (pccc_buffer *)pccc_st_search(ctxt->buffers, name);

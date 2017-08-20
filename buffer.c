@@ -11,8 +11,10 @@ pccc_buffer_init(char *name, char *contents, size_t len, unsigned int flags){
 	ret->name = PCCC_MALLOC(char, namelen);
 	strncpy(ret->name, name, namelen);
 
-	ret->contents = PCCC_MALLOC(char, len + 1);
-	strncpy(ret->contents, contents, len + 1);
+	if (!(flags & PCCC_BUFFER_PREALLOC)){
+		ret->contents = PCCC_MALLOC(char, len + 1);
+		strncpy(ret->contents, contents, len + 1);
+	}
 
 	ret->len = len;
 	ret->flags = flags;
@@ -38,3 +40,31 @@ pccc_buffer_update(pccc_buffer *buf, char *contents, size_t len){
 	// Unlock the mutex.
 	pthread_mutex_unlock(buf->mutex);
 }
+
+char *
+pccc_buffer_get_folder(char *name, size_t *length){
+	int len = strlen(name) - 1;
+	
+	while (len != 0 && name[len] != PCCC_FOLDER_PATH){
+		len--;
+		PCCC_PRINTF("Current char: %c\n", name[len]);
+	}
+
+	if (len == 0)
+		return NULL;
+
+	char *result = PCCC_MALLOC(char, len + 1);
+	strncpy(result, name, len);
+	result[len] = '\0';
+	PCCC_PRINTF("Result of folder search: %s\n", result);
+
+	if (length != NULL)
+		*length = len;
+
+	return result;
+}
+
+/*void
+pccc_buffer_from_file(pccc_context *ctxt, char *path){
+
+}*/

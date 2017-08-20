@@ -25,6 +25,12 @@ pccc_suggest_prefix(pccc_context* ctxt, char *s);
 void
 pccc_add_buffer(pccc_context *ctxt, pccc_buffer *buf);
 
+void
+pccc_add_new_buffer(pccc_context *ctxt, char *name, char *contents, int len, int flags);
+
+void 
+pccc_update_buffer(pccc_context *ctxt, char *name, char *contents, int len);
+
 // Gets a buffer from a context.
 pccc_buffer* 
 pccc_get_buffer(pccc_context *ctxt, char *name);
