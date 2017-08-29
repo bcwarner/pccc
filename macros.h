@@ -5,8 +5,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 
-#define PCCC_MALLOC(p, s) ((p *)malloc(sizeof(p) * s))
+#define PCCC_MALLOC(p, s) ((p *)calloc(sizeof(p), s))
 
 #define PCCC_BUFFER_STATIC 0 // Referenced file, will never change.
 #define PCCC_BUFFER_DYNAMIC 1 // File being edited, may change.
@@ -16,7 +17,7 @@
 
 #define PCCC_BUFFER_MALLOC 4096
 
-#define PCCC_SUCCESS 0
+#define PCCC_SUCCESS 0 
 #define PCCC_FAILURE -1
 
 #define PCCC_LP_ALL -1 // States that lexer/parser should parse all bufs.
@@ -24,7 +25,7 @@
 #define PCCC_RADIX 256 // Radix of string trie.
 
 #ifdef DEBUG
-	#define PCCC_PRINTF(str, ...) printf(str, __VA_ARGS__);
+	#define PCCC_PRINTF(str, ...) syslog(LOG_DEBUG, str, __VA_ARGS__); //syslog(LOG_DEBUG, str, __VA_ARGS__);
 #else
 	#define PCCC_PRINTF(str, ...)
 #endif
@@ -40,3 +41,4 @@
 #define PCCC_FOLDER_PATH '/'
 #define PCCC_PATH_PREFIX "PATH" PCCC_FOLDER_PATH
 #define PCCC_ENV_VAR {"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", NULL}
+

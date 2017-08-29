@@ -7,7 +7,7 @@
 #include "st.h"
 
 // Change this to a TST.
-
+// Implementation based on the description of Algorithms, 4th ed. by Sedgewick and Wayne.
 // Linked list implementation to help with collection.
 
 pccc_linked_list*
@@ -40,6 +40,11 @@ pccc_linked_list_array(pccc_linked_list *list){
 
 	pccc_linked_list_node *node = list->first;
 	int c = 0;
+
+	if (node == NULL){
+		return array; // Return early since there is nothing to add.
+	}
+
 	do { // Traverse the nodes and add them to the array.
 		array[c++] = node->val; // Assign the node, then increment.
 		node = node->next; // Goto next node.
@@ -60,20 +65,33 @@ pccc_st*
 pccc_st_init(){
 	// Allocate the root, then the table.
 	pccc_st* r = PCCC_MALLOC(pccc_st, 1);
+	r->mutex = PCCC_MALLOC(pthread_mutex_t, 1);
+	pthread_mutex_init(r->mutex, NULL);
 	return r;
 }
 
 pccc_st_node*
 pccc_st_search(pccc_st* t, char * key){
-	return pccc_st_search_node(t->root, key, strlen(key), 0);
+	PCCC_PRINTF("Searching for key %s", key);
+	// Copy the key since it is freed quickly.
+	//size_t sk = strlen(key);
+	//char *k = PCCC_MALLOC(char, sk);
+	//strncpy(k, key, sk);
+	pthread_mutex_lock(t->mutex);
+	pccc_st_node *r = pccc_st_search_node(t->root, key, strlen(key), 0);
+	pthread_mutex_unlock(t->mutex);
+	return r;
 }
 
 pccc_st_node*
 pccc_st_search_node(pccc_st_node* node, char *key, size_t len, unsigned int i){
-	if (node == NULL) // Empty, return.
+	PCCC_PRINTF("Searching node with key '%s' at position %u with max index %lu. Value of node val: %p", key, i, len - 1, node);
+	if (node == NULL){ // Empty, return.
 		return NULL;
+	}
 	if (len == i) // Match.
 		return node;
+	PCCC_PRINTF("Next node = key[%u]", (unsigned int)key[i]);
 	return pccc_st_search_node(node->next[(unsigned int)key[i]], key, len, i + 1);
 }
 
@@ -83,8 +101,10 @@ pccc_st_search_prefix(pccc_st* t, char * key){
 	pccc_linked_list *l = pccc_linked_list_create();
 
 	// Search
-	pccc_st_node* root = pccc_st_search(t, key);
-	pccc_st_search_prefix_node(root, key, strlen(key), l);
+	pccc_st_node *start = pccc_st_search(t, key);
+	pthread_mutex_lock(t->mutex);
+	pccc_st_search_prefix_node(start, key, strlen(key), l);
+	pthread_mutex_unlock(t->mutex);
 
 	return l;
 }
@@ -94,6 +114,7 @@ pccc_st_search_prefix_node(pccc_st_node *node, char *key, size_t len, pccc_linke
 	if (node == NULL)
 		return;
 	if (node->val != NULL){
+		PCCC_PRINTF("Adding key to linked list: %s\n", key);
 		pccc_linked_list_add(list, key, len + 1);
 	} // Add the node to the queue.
 	// Iterate through the next array and find matches. Create new strings for them.
@@ -113,18 +134,24 @@ pccc_st_search_prefix_node(pccc_st_node *node, char *key, size_t len, pccc_linke
 
 void 
 pccc_st_set(pccc_st *t, char *key, void *val){
+	printf("Setting value for key '%s'\n", key);
+	pthread_mutex_lock(t->mutex);
 	t->root = pccc_st_set_node(t->root, key, val, strlen(key), 0);
+	pthread_mutex_unlock(t->mutex);
 }
 
 // Potential error with passing pointers.
 pccc_st_node*
 pccc_st_set_node(pccc_st_node* node, char * key, void * val, size_t len, unsigned int i){
+	PCCC_PRINTF("Searching for key %s at position %d", key, i);
 	if (node == NULL){
-		node = (pccc_st_node *)calloc(sizeof(pccc_st_node), 1);
+		node = PCCC_MALLOC(pccc_st_node, 1);
+		PCCC_PRINTF("Allocating new node for node %p", node);
 		for (int i = 0; i < PCCC_RADIX; i++)
 			node->next[i] = NULL;
 	}
 	if (i == len){
+		PCCC_PRINTF("Found node. Setting to value %p", val);
 		node->val = val;
 		return node;
 	}
@@ -132,3 +159,11 @@ pccc_st_set_node(pccc_st_node* node, char * key, void * val, size_t len, unsigne
 	node->next[(int)key[i]] = pccc_st_set_node(node->next[(int)key[i]], key, val, len, i + 1); // Keep going recursively.
 	return node;
 }
+
+/*
+
+Aug 24 22:07:21 ubuntu plugin_host: Searching for key /home/bcwarner/srcs/senior-project/tests/test_sublime.c
+Aug 24 22:07:21 ubuntu plugin_host: Searching node with key '/home/bcwarner/srcs/senior-project/tests/test_sublime.c' at position 0 with max index 54. Value of node val: (nil)
+Aug 24 22:07:21 ubuntu plugin_host: Next node = key[47]
+
+*/

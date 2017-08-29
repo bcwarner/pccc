@@ -3,21 +3,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include "c.tab.h"
+#include "../types.h"
+#include "../pccc.h"
 /*
 (\".*\"|\S)*		return TOKEN_SEQUENCE;
 [^\n]*				return TOKEN_FILE;
 */
-//%option prefix="pccc_lp_c" Removed because it causes issues.
+
+#define YY_DECL int yylex(pccc_context *ctxt)
+
 %}
 
-
-
-%option nounistd
-%option never-interactive
+%option prefix="pccc_lp_c"
 
 %%
-
-
 
 "/*".*"*/"			;
 "//".*\n 			;
@@ -39,8 +38,6 @@ continue			return TOKEN_CONTINUE;
 break				return TOKEN_BREAK;
 return				return TOKEN_RETURN;
 sizeof				return TOKEN_SIZEOF;
-define				return TOKEN_DEFINE;
-include				return TOKEN_INCLUDE;
 (\=|\*\=|\/=|\%\=|\+\=|\-\=|\<\<\=|\>\>\=|\&\=|\^\=|\|\=) return TOKEN_ASSIGNMENT; // Split up.
 "..."				return TOKEN_ELLIPSIS;
 "||"				return TOKEN_LOGICAL_OR;
@@ -54,8 +51,7 @@ include				return TOKEN_INCLUDE;
 "<<"				return TOKEN_LSHIFT;
 "!="				return TOKEN_NOT_EQUAL;
 "<="				return TOKEN_LTE;
-(\&|\*|\+|\-|\~|\!)	return TOKEN_UNARY_OP; // Split up.
-[a-zA-Z\_][a-zA-Z0-9\_]* return TOKEN_IDENTIFIER;
+[a-zA-Z\_][a-zA-Z0-9\_]* { pccc_lp_clval.str_val = pccc_lp_ctext; printf("Found identifier %s\n", pccc_lp_ctext); pccc_st_set(ctxt->symbols, pccc_lp_ctext, pccc_lp_ctext); return TOKEN_IDENTIFIER; }
 \".*\"				return TOKEN_STRING;
 (0x|0|0X)?[0-9A-Fa-f]*(u|U|l|L)? return TOKEN_INTEGER;
 L?\'(\\\'|\\[^\\\']*|.)\'	return TOKEN_CHARACTER;

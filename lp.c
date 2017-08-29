@@ -91,6 +91,8 @@ pccc_lp_regex_match(const regex_t *reg, char *contents, size_t nmatches, int *om
 		off_contents = contents + offset;
 	}
 
+	PCCC_PRINTF("Matches found: %d", actual_match);
+
 	*omatches = actual_match;
 
 	return matches;
@@ -120,8 +122,10 @@ pccc_lp_c_headers(pccc_context *ctxt, pccc_buffer *buf){
 
 		PCCC_PRINTF("Copied file name [%d-%d]: %s\n", match[1].rm_so, match[1].rm_eo, fn);
 
-		if (pccc_st_search(ctxt->symbols, fn) != NULL) // Return since this file is already in use.
-			return;
+		if (pccc_st_search(ctxt->buffers, fn) != NULL) { // Return since this file is already in use.
+			PCCC_PRINTF("File %s already exists.", fn);
+			continue;
+		}
 
 		// Determine the flags.
 		int flags = 0;
@@ -133,13 +137,12 @@ pccc_lp_c_headers(pccc_context *ctxt, pccc_buffer *buf){
 			// Find the prefix.
 
 			if (access(fn, F_OK | R_OK) != 0){
-				PCCC_PRINTF("Error: File %s does not exist.\n", fn)
-				return;
+				PCCC_PRINTF("Error: File %s is not accessible.\n", fn)
 			}
 			PCCC_PRINTF("File %s exists\n", fn);
 
-			//folder = pccc_buffer_get_folder(fn, &folderlen);
-			//PCCC_PRINTF("Containing folder: %s\n", folder);
+			folder = pccc_buffer_get_folder(buf->name, &folderlen);
+			PCCC_PRINTF("Containing folder: %s\n", folder);
 			local = 2; // Set this so that the include statement string will be expanded to escape characters.
 		} // Otherwise, prepend a constant prefix
 
@@ -162,7 +165,7 @@ pccc_lp_c_headers(pccc_context *ctxt, pccc_buffer *buf){
 
 			// Create two separate tracks.
 			int j = 0;
-			for (int i = 0; i < (ilen + local + 1); i++){
+			for (int i = 0; i < ilen; i++){
 				if (is[i] == '\"'){
 					new_str[j++] = '\\';
 					new_str[j++] = '\"';
@@ -182,6 +185,7 @@ pccc_lp_c_headers(pccc_context *ctxt, pccc_buffer *buf){
 		PCCC_PRINTF("Include match: %s\n", is);
 
 		int arg2len = 27 + ilen + local + 1;
+		// Strange memory mismanagement is occurring, apparently from another thread. Will be removed later.
 		char *arg2 = PCCC_MALLOC(char, arg2len);
 		// Create the final command.
 		snprintf(arg2, arg2len, "echo \"%s\" | gcc -E -P -x c -", is); // This command is 30 characters long.
@@ -196,14 +200,15 @@ pccc_lp_c_headers(pccc_context *ctxt, pccc_buffer *buf){
 			//close(input[1]); // Close the ends of the pipe we aren't concerned with.
 			close(output[0]);
 			PCCC_PRINTF("Closed {%d}.\n", output[0]);
+			if (folder != NULL){
+				chdir(folder);
+				PCCC_PRINTF("Changed folder to: %s\n", folder);
+			}
 			//dup2(stdin, fd[0]); // Shift the pipes so they work upon exec.
 			dup2(output[1], STDOUT_FILENO); // FIX THIS SO IT WORKS
 			close(output[1]);
-			PCCC_PRINTF("Dup2'd %d to stdout\n", output[1]);
-			if (folder != NULL){
-				//chdir(folder);
-				PCCC_PRINTF("Changed folder to: %s\n", folder);
-			}
+			//PCCC_PRINTF("Dup2'd %d to stdout\n", output[1]);
+
 			char *loc = "/bin/bash";
 			char *c = "-c";
 			char *argv[] = {
@@ -213,7 +218,7 @@ pccc_lp_c_headers(pccc_context *ctxt, pccc_buffer *buf){
 				NULL
 			};
 
-			PCCC_PRINTF("Argument being passed: %s\n", arg2);
+			//PCCC_PRINTF("Argument being passed: %s\n", arg2);
 			if (execve("/bin/bash", argv, env) == -1)
 				PCCC_PRINTF("Failed to execve. Errno: %d\n", errno);
 		} else {
@@ -242,7 +247,9 @@ pccc_lp_c_headers(pccc_context *ctxt, pccc_buffer *buf){
 			pccc_buffer *new_buf = pccc_buffer_init(fn, buf, PCCC_BUFFER_MALLOC * blocks, PCCC_BUFFER_STATIC | PCCC_BUFFER_PREALLOC);
 			pccc_add_buffer(ctxt, new_buf);
 
+			PCCC_PRINTF("Starting analysis of new buffer: %s", new_buf->name);
 			pccc_lp_c_analyze(ctxt, new_buf);
+			PCCC_PRINTF("Finished analysis of new buffer: %s", new_buf->name);
 
 			close(input[1]);
 		}
@@ -274,11 +281,15 @@ pccc_lp_c_define(pccc_context *ctxt, pccc_buffer *buf){
 	for (int i = 0; i < m; i++){
 		regmatch_t *match = matches[i];
 
+		if (match[1].rm_so == -1)
+			continue;
+
 		// Copy the contents of the key from the buffer.
 		size_t sk = PCCC_REGEX_LEN(match[1]);
 		char *key = PCCC_MALLOC(char, sk + 1);
 		strncpy(key, buf->contents + match[1].rm_so, sk);
 		key[sk] = '\0';
+		PCCC_PRINTF("Found key: %s", key);
 
 		char *val;
 		// Copy the contents of the value from the buffer.
@@ -287,6 +298,10 @@ pccc_lp_c_define(pccc_context *ctxt, pccc_buffer *buf){
 			val = PCCC_MALLOC(char, sv + 1);
 			strncpy(val, buf->contents + match[2].rm_so, sv);
 			val[sv] = '\0';
+			PCCC_PRINTF("Found value: %s", val);
+		} else {
+			val = PCCC_MALLOC(char, 1);
+			val[0] = '\0';
 		}
 
 		// Store the item into the symbol table.
@@ -310,16 +325,24 @@ pccc_lp_c_analyze(pccc_context *ctxt, pccc_buffer *buf){
 
 	// Load the buffer.
 
-	//pccc_lp_c_scan_buffer(buf->contents, buf->len);
+	pccc_lp_c_scan_buffer(buf->contents, buf->len);
 
-	// Analyze.
-	//pccc_lp_cparse(ctxt);
+	// Analyze. Replace this with yyparse later.
+	pccc_lp_cparse(ctxt);
 }
 
 void 
 pccc_lp_c_tokenize(pccc_context *ctxt, pccc_buffer *buf){
 	//pccc_lp_lex
+
 }
+
+void
+pccc_lp_default_fn(pccc_context *ctxt, pccc_buffer *buf){
+	return;
+}
+
+pccc_lp pccc_lp_default = { &pccc_lp_default_fn, &pccc_lp_default_fn };
 
 pccc_lp * pccc_select_lp(char *fn){
 	size_t len = strlen(fn);
@@ -332,13 +355,16 @@ pccc_lp * pccc_select_lp(char *fn){
 	
 	if (strncmp(fe, "c", fe_len) == 0 || strncmp(fe, "h", fe_len) == 0)
 		return &pccc_lp_c;
-	
+
 	#ifdef DEBUG
 	else if (strncmp(fe, "test", fe_len) == 0){
 		//PCCC_PRINTF("Chose test lp.");
 		return &pccc_lp_test;
 	}
 	#endif
+
+	else
+		return &pccc_lp_default;
 
 	return NULL;
 }

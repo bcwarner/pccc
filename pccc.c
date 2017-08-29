@@ -16,7 +16,6 @@ pccc_init(pccc_buffer ** buf, int n){
 	ctxt->buffers = pccc_st_init();
 	ctxt->threads = pccc_st_init();
 	ctxt->symbols = pccc_st_init();
-	ctxt->parent_child = pccc_st_init();
 
 	// Move the buffers into the symbol table.
 	for (int i = 0; i < n; i++){
@@ -53,6 +52,7 @@ pccc_suggest_prefix(pccc_context* ctxt, char *s){
 
 	// Return values.
 	return r;
+	
 }
 
 // Adds a buffer
@@ -64,10 +64,12 @@ pccc_add_buffer(pccc_context *ctxt, pccc_buffer *buf){
 	pccc_st_set(ctxt->buffers, buf->name, (void *)buf);
 }
 
-void
+pccc_buffer*
 pccc_add_new_buffer(pccc_context *ctxt, char *name, char *contents, int len, int flags){
 	pccc_buffer *buf = pccc_buffer_init(name, contents, len, flags);
+	PCCC_PRINTF("Created new buffer %s with size of %d. Sample: %*.s", name, len, 50, contents);
 	pccc_st_set(ctxt->buffers, buf->name, (void *)buf);
+	return buf;
 }
 
 pccc_buffer* 
@@ -75,7 +77,7 @@ pccc_get_buffer(pccc_context *ctxt, char *name){
 	return (pccc_buffer *)pccc_st_search(ctxt->buffers, name);
 }
 
-void 
+void
 pccc_update_buffer(pccc_context *ctxt, char *name, char *contents, int len){
 	// Get the buffer.
 	pccc_buffer *b = pccc_get_buffer(ctxt, name);
@@ -95,12 +97,16 @@ pccc_analyze_async(void *a){
 	struct pccc_analysis_args *args = (struct pccc_analysis_args *)a;
 	pthread_mutex_lock(args->buf->mutex);
 
+	PCCC_PRINTF("Locked mutex for %s.", args->buf->name);
+
 	// Select an analyzer based upon file name.
 
 	pccc_lp * lp = pccc_select_lp(args->buf->name); 
 
 	// Call the parser using these args.
 	lp->analyze(args->ctxt, args->buf);
+
+	PCCC_PRINTF("Finished analysis for %s.", args->buf->name);
 
 	// Exit the thread.
 	pthread_mutex_unlock(args->buf->mutex);

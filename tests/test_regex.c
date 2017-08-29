@@ -5,8 +5,8 @@
 
 #include <stdio.h>
 
-const char *fi = "#include <stdio.h>\n"
-//"#include \"lp/c.tab.h\"\n" // This seems to cause an error.
+const char *fi = //"#include <stdio.h>\n"
+"#include \"lp/c.tab.h\"\n" // This seems to cause an error.
 "#define A B 10\n"
 "#define PCCC_TEST\n\n"
 "int main(int argc, char *argv[]){\n"
@@ -18,9 +18,11 @@ int main(int argc, char *argv[]){
 	pccc_context *ctxt = pccc_init(NULL, 0);
 
 	// Load an imaginary C file.
-	pccc_buffer *buf = pccc_buffer_init("~/srcs/senior-project/test.c", fi, strlen(fi), PCCC_BUFFER_STATIC);
 
-	pccc_add_buffer(ctxt, buf);
+	pccc_buffer *result = pccc_get_buffer(ctxt, "foo.bar");
+	printf("Result of failed search: %p\n", result);
+
+	pccc_buffer *buf = pccc_add_new_buffer(ctxt, "/home/bcwarner/srcs/senior-project/test.c", fi, strlen(fi), PCCC_BUFFER_STATIC);
 
 	// Preprocess.
 

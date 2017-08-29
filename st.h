@@ -1,7 +1,8 @@
 /*
-Binary Symbol Table
+Search Trie Symbol Table
 We use this since it is simpler to implement than a hash table, yet still suitable for our need of storing thousands of keys.
 Use the prefix pccc_st_ since we may want to change the symbol table type later, but don't want to necessarily break any dependencies.
+Uses Sedgewick and Wayne's implementation with modifications.
 */
 
 #include <stdio.h>

@@ -14,6 +14,8 @@ pccc_buffer_init(char *name, char *contents, size_t len, unsigned int flags){
 	if (!(flags & PCCC_BUFFER_PREALLOC)){
 		ret->contents = PCCC_MALLOC(char, len + 1);
 		strncpy(ret->contents, contents, len + 1);
+	} else {
+		ret->contents = contents;
 	}
 
 	ret->len = len;

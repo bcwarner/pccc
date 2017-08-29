@@ -30,13 +30,12 @@ typedef struct pccc_st_node {
 typedef struct pccc_st {
 	pccc_st_node* root;
 	// int N; Not applicable
+	pthread_mutex_t *mutex;
 } pccc_st;
 
 typedef struct pccc_context {
 	pccc_st* buffers;
 	pccc_st* symbols;
-	pccc_st* parent_child;
-	pccc_st* inherits;
 	pccc_st* threads;
 } pccc_context;
 

@@ -4,37 +4,43 @@ Uses the definition found in K&R C, 2nd Edition, pg. 234-239, with several adjus
 Crossreferenced against: https://www.lysator.liu.se/c/ANSI-C-grammar-y.html
 */
 %{
-	//#pragma once
-	//#include <stdio.h>
-	//#include <string.h>
-	//#include <stdlib.h>
-	#include "../pccc.h"
-	#include "../types.h"
-	 
-	/*void main(){
-		pccc_lp_cparse();
-	}*/
-
-	void yyerror(const char *str)
-	{
-	        printf("error: %s\n",str);
-	}
-	 
-	int yywrap()
-	{
-	        return 1;
-	}
+	#include <stdio.h>
+	#include <string.h>
+	#include <stdlib.h>
 %}
 
+%code requires{
+	#include "../types.h"
+	#include "../st.h"
+
+}
 
 // Debugger info.
 %define parse.error verbose
 %define parse.trace 
-%printer { fprintf(stdout, "Parsed: %s", $$); } <*>
+//%printer { fprintf(stdout, "Parsed: &%p", $$); } <*>
 
 // yyparse info
-//%parse-param {pccc_context *ctxt}
-//%define api.prefix {pccc_lp_c}
+%param {pccc_context *ctxt}
+%define api.prefix {pccc_lp_c}
+
+%union { // Declared for future expansion.
+	char *str_val; 
+}
+
+%{
+	
+	void pccc_lp_cerror(pccc_context *ctxt, const char *str)
+	{
+	        printf("Parsing error in C parser: %s\n",str);
+	}
+	 
+	int pccc_lp_cwrap()
+	{
+	        return 1;
+	}
+	
+%}
 
 %token TOKEN_STORAGE_CLASS_SPECIFIER;
 %token TOKEN_TYPE_SPECIFIER;
@@ -61,12 +67,7 @@ Crossreferenced against: https://www.lysator.liu.se/c/ANSI-C-grammar-y.html
 %token TOKEN_DECREMENT;
 %token TOKEN_SIZEOF;
 %token TOKEN_PTR_MEMBER;
-%token TOKEN_DEFINE;
-%token TOKEN_SEQUENCE;
-%token TOKEN_INCLUDE;
-%token TOKEN_FILE;
-%token TOKEN_UNARY_OP;
-%token TOKEN_IDENTIFIER;
+%token <str_val> TOKEN_IDENTIFIER;
 %token TOKEN_STRING;
 %token TOKEN_INTEGER;
 %token TOKEN_CHARACTER;
@@ -95,8 +96,8 @@ primary_expression: TOKEN_IDENTIFIER
 
 postfix_expression: primary_expression
 				| postfix_expression '[' expression ']'
-				| postfix_expression '(' argument_expression_list ')'
 				| postfix_expression '(' ')'
+				| postfix_expression '(' argument_expression_list ')'
 				| postfix_expression '.' TOKEN_IDENTIFIER
 				| postfix_expression TOKEN_PTR_MEMBER TOKEN_IDENTIFIER
 				| postfix_expression TOKEN_INCREMENT
@@ -110,10 +111,11 @@ argument_expression_list: assignment_expression
 unary_expression: postfix_expression
 				| TOKEN_INCREMENT unary_expression
 				| TOKEN_DECREMENT unary_expression
-				| TOKEN_UNARY_OP cast_expression
+				| unary_op cast_expression
 				| TOKEN_SIZEOF unary_expression
 				| TOKEN_SIZEOF '(' type_name ')'
 				;
+unary_op: '&' | '*' | '+' | '-' | '~' | '!';
 
 cast_expression: unary_expression
 				| '(' type_name ')' cast_expression
@@ -203,6 +205,10 @@ init_declarator: declarator
 				| declarator '=' initializer
 				;
 
+identifier_list: TOKEN_IDENTIFIER
+				| identifier_list ',' TOKEN_IDENTIFIER
+				;
+
 type_specifier: TOKEN_TYPE_SPECIFIER
 				| struct_or_union_specifier
 				| enum_specifier
@@ -234,17 +240,17 @@ struct_declarator: declarator
 				| ':' constant_expression
 				;
 
-enum_specifier: TOKEN_ENUM TOKEN_IDENTIFIER '{' enumerator_list '}'
+enum_specifier: TOKEN_ENUM TOKEN_IDENTIFIER '{' enumerator_list '}' { printf("Found identifier: %s\n", $2); pccc_st_set(ctxt->symbols, $2, $2); }
 				| TOKEN_ENUM '{' enumerator_list '}'
-				| TOKEN_ENUM TOKEN_IDENTIFIER
+				| TOKEN_ENUM TOKEN_IDENTIFIER { printf("Found identifier: %s\n", $2); pccc_st_set(ctxt->symbols, $2, $2); }
 				;
 
 enumerator_list: enumerator
 				| enumerator_list ',' enumerator
 				;
 
-enumerator:	TOKEN_IDENTIFIER
-				| TOKEN_IDENTIFIER '=' constant_expression
+enumerator:	TOKEN_IDENTIFIER {  printf("Found identifier: %s\n", $1); pccc_st_set(ctxt->symbols, $1, $1); }
+				| TOKEN_IDENTIFIER '=' constant_expression { printf("Found identifier: %s\n", $1); pccc_st_set(ctxt->symbols, $1, $1); }
 				;
 
 type_qualifier: TOKEN_TYPE_QUALIFIER
@@ -254,7 +260,7 @@ declarator: pointer direct_declarator
 				| direct_declarator
 				;
 
-direct_declarator: TOKEN_IDENTIFIER
+direct_declarator: TOKEN_IDENTIFIER {  printf("Found identifier: %s\n", $1); pccc_st_set(ctxt->symbols, $1, $1); }
 				| '(' declarator ')'
 				| direct_declarator '[' constant_expression ']'
 				| direct_declarator '[' ']'
@@ -284,10 +290,6 @@ parameter_list: parameter_declaration
 parameter_declaration: declaration_specifiers declarator
 				| declaration_specifiers abstract_declarator
 				| declaration_specifiers
-				;
-
-identifier_list: TOKEN_IDENTIFIER
-				| identifier_list ',' TOKEN_IDENTIFIER
 				;
 
 type_name: specifier_qualifer_list abstract_declarator
@@ -323,7 +325,7 @@ statement: labeled_statement
 				| jump_statement
 				;
 
-labeled_statement: TOKEN_IDENTIFIER ':' statement
+labeled_statement: TOKEN_IDENTIFIER ':' statement { printf("Found identifier: %s\n", $1); pccc_st_set(ctxt->symbols, $1, $1); }
 				| TOKEN_CASE constant_expression ':' statement
 				| TOKEN_DEFAULT ':' statement
 				;
