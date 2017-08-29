@@ -1,8 +1,24 @@
 /*
+    PCCC: A portable library for context-cognizant completions.
+    Copyright (C) 2017  bcwarner
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 Search Trie Symbol Table
 We use this since it is simpler to implement than a hash table, yet still suitable for our need of storing thousands of keys.
 Use the prefix pccc_st_ since we may want to change the symbol table type later, but don't want to necessarily break any dependencies.
-Uses Sedgewick and Wayne's implementation with modifications.
+Implementation based on the description of Algorithms, 4th ed. by Sedgewick and Wayne. Their implementation is licensed under the GPLv3 and any conditions added under section 7 of the GPLv3.
 */
 
 #include <stdio.h>
