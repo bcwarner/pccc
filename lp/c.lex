@@ -33,6 +33,13 @@
 
 #define YY_DECL int yylex(pccc_context *ctxt)
 
+#define YY_USER_ACTION pccc_lp_coffset += yyleng;
+
+int typedefc;
+int typedefo;
+
+int pccc_lp_coffset;
+
 %}
 
 %option prefix="pccc_lp_c"
@@ -41,7 +48,8 @@
 
 "/*".*"*/"			;
 "//".*\n 			;
-(auto|register|static|extern|typedef) 	return TOKEN_STORAGE_CLASS_SPECIFIER;
+(auto|register|static|extern) return TOKEN_STORAGE_CLASS_SPECIFIER;
+typedef 			{ typedefc++; typedefo = 1; return TOKEN_STORAGE_CLASS_SPECIFIER; } // Trick to skip full-blown analysis.
 (void|char|short|int|long|float|double|signed|unsigned)	return TOKEN_TYPE_SPECIFIER;
 (const|volatile)	return TOKEN_TYPE_QUALIFIER;
 (struct|union)		return TOKEN_STRUCT_OR_UNION;
@@ -59,20 +67,10 @@ continue			return TOKEN_CONTINUE;
 break				return TOKEN_BREAK;
 return				return TOKEN_RETURN;
 sizeof				return TOKEN_SIZEOF;
-(\=|\*\=|\/=|\%\=|\+\=|\-\=|\<\<\=|\>\>\=|\&\=|\^\=|\|\=) return TOKEN_ASSIGNMENT; // Split up.
-"..."				return TOKEN_ELLIPSIS;
-"||"				return TOKEN_LOGICAL_OR;
-"&&"				return TOKEN_LOGICAL_AND;
-"++"				return TOKEN_INCREMENT;
-"--"				return TOKEN_DECREMENT;
-"->"				return TOKEN_PTR_MEMBER;
-"=="				return TOKEN_EQUAL;
-">="				return TOKEN_GTE;
-">>"				return TOKEN_RSHIFT;
-"<<"				return TOKEN_LSHIFT;
+(\=|\*\=|\/=|\%\=|\+\=|\-\=|\<\<\=|\>\>\=|\&\=|\^\=|\|\=) return TOKEN_ASSIGNMENT; // Split up.s
 "!="				return TOKEN_NOT_EQUAL;
 "<="				return TOKEN_LTE;
-[a-zA-Z\_][a-zA-Z0-9\_]* { pccc_lp_clval.str_val = pccc_lp_ctext; printf("Found identifier %s\n", pccc_lp_ctext); pccc_st_set(ctxt->symbols, pccc_lp_ctext, pccc_lp_ctext); return TOKEN_IDENTIFIER; }
+[a-zA-Z\_][a-zA-Z0-9\_]* { pccc_lp_clval.str_val = pccc_lp_ctext; printf("Found identifier %s\n", pccc_lp_ctext); pccc_st_set(ctxt->symbols, pccc_lp_ctext, pccc_lp_ctext); if(typedefc > 0 || typedefo == 0) { typedefc = 0; return TOKEN_IDENTIFIER; } else { typedefo = 0; return TOKEN_TYPE_SPECIFIER; } }
 \".*\"				return TOKEN_STRING;
 (0x|0|0X)?[0-9A-Fa-f]*(u|U|l|L)? return TOKEN_INTEGER;
 L?\'(\\\'|\\[^\\\']*|.)\'	return TOKEN_CHARACTER;

@@ -22,7 +22,12 @@
 
 #include <stdio.h>
 
-const char *fi = //"#include <stdio.h>\n"
+const char *fi = "#include <stdio.h>\n"
+"#include <unistd.h>\n"
+"#include <math.h>\n"
+"#include <float.h>\n"
+"#include <string.h>\n"
+"#include <stdlib.h>\n"
 "#include \"lp/c.tab.h\"\n" // This seems to cause an error.
 "#define A B 10\n"
 "#define PCCC_TEST\n\n"

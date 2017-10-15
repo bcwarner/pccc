@@ -344,8 +344,27 @@ pccc_lp_c_analyze(pccc_context *ctxt, pccc_buffer *buf){
 
 	pccc_lp_c_scan_buffer(buf->contents, buf->len);
 
+	char *off = buf->contents;
 	// Analyze. Replace this with yyparse later.
-	pccc_lp_cparse(ctxt);
+	while (1){ // We will manually break this loop.
+		pccc_lp_cparse(ctxt);
+
+		extern pccc_lp_coffset;
+		// Jump past the error and onto the next newline.
+		int j = 0;
+		int m = (buf->len / 10);
+		int min = m < 50 ? m : 50; 
+
+		//j += pccc_lp_coffset; This offers less coverage than jumping over an error.
+		while (j < min && off[j] != EOF && off[j] != '\0')
+			j++;
+		while (off[j] != EOF && off[j] != '\0' && off[j] != '\n')
+			j++;
+		if (off[j] != '\n') // We can return here since we know that this is either an EOF or \0, which in either case is the end.
+			return;
+
+		off += j;
+	}
 }
 
 void 
