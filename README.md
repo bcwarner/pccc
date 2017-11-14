@@ -1,8 +1,27 @@
 # Portable Context-Cognizant Completer
 
-PCCC is an expanable library which can be used to power a text editor's auto completer and provide more helpful suggestions based on the document being edited. For example, insertions into a C file containing a reference to stdio.h may show up with suggestions to symbols like `size\_t`. PCCC is written in C, and the lexer/parsers it uses are written in Flex and Bison. A plugin is available for Sublime Text in the repository. PCCC is licensed under the GPLv3, and the project is currently in its alpha stage.
+PCCC is an expandable library which can be used to supply a text editor's auto completer with more helpful suggestions based on the document being edited. For example, insertions into a C file containing a reference to stdio.h may show up with suggestions to symbols like `size\_t`. Suggestions will come up based on the contents of the files being referenced. 
 
-## Usage
+PCCC is written in C, and the lexers and parsers it uses are written in Flex and Bison. You can implement PCCC into your program if you are using Linux and have `make`, `gcc`, `bison`, and `flex` installed on your system. You can also use the included Sublime Text plugin if you have those prerequisites and have Sublime Text installed.
+
+PCCC is licensed under the GPLv3, and the project is currently in its alpha stage.
+
+## General Usage
+
+To install this library and use the default Sublime Text plugin, you will need to use `make` using the `release` target. If we were to open up a new file and save it with a file name ending in `.c` and include `stdio.h`, then we should get:
+
+![Basic Example](examples/example_a.png)
+
+Here's another example with the `pthread.h` header included:
+
+![pthread.h Example](examples/example_c.png)
+
+We can also include local files and PCCC will recognize them.
+
+![Local Header Example](examples/example_b.png)
+
+
+## Programming Usage
 You can find an example of how this library works in plugins/pccc\_sublime.py.
 
 We first start off by creating a _context_. This will primarily keep track of the symbols and buffers in use
@@ -35,7 +54,7 @@ The result will return a pointer to a structure containing an array, `suggestion
 
 
 ## Contributing
-If you want to contribute, there are several things you can do:
+Contributions will significantly improve the capabilities and stability of PCCC, which will increase yours and others productivity. If you want to contribute, there are several things you can do:
 - Fix memory issues, and make it more efficient.
 - Add or improve support for another language.
 - Fix bugs.

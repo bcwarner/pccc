@@ -19,7 +19,8 @@ CFLAGS=-Wall -pthread -fpic
 SONAME=libpccc.so
 SONAMEVER=$(SONAME).1
 LIBFLAGS=-pthread -shared -fpic -Wl,-soname,$(SONAME)
-DFLAGS=-g -D DEBUG
+DFLAGS= 
+#-g -D DEBUG
 SRC=$(wildcard *.c)
 OBJ=$(SRC:%.c=%.o) lp/c.tab.o lp/c.yy.o
 PLUGINSRC=$(wildcard plugins/*)

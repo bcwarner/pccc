@@ -141,6 +141,7 @@ pccc_lp_c_headers(pccc_context *ctxt, pccc_buffer *buf){
 
 		if (pccc_st_search(ctxt->buffers, fn) != NULL) { // Return since this file is already in use.
 			PCCC_PRINTF("File %s already exists.", fn);
+			free(fn);
 			continue;
 		}
 
