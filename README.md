@@ -33,14 +33,14 @@ We first start off by creating a _context_. This will primarily keep track of th
 pccc_init(NULL, 0); // The arguments are an array of pccc_buffer *, and an int giving the length of the array.
 ```
 
-Next, you need to add buffers that the text editor is using so the library can keep track of it and analyze it for you. You can do this by calling:
+Next, we need to add the buffers that the text editor is using so the library can keep track of it and analyze it for us. We can do this by calling:
 ```
 
 pccc_buffer *buf = pccc_add_new_buffer(ctxt, fn, buf, buflen, PCCC_BUFFER_DYNAMIC);
 ```
 This tells the given context, `ctxt`, that a buffer with file name (this needs to be the absolute path), `fn`, has the contents `buf` of size `buflen`, and that it will have a flag stating that it will be edited several times.
 
-Next, you need to analyze it.
+Next, we need to analyze it.
 ```
 pccc_analyze(ctxt, buf);
 ```
