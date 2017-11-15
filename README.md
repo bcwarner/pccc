@@ -1,10 +1,6 @@
 # Portable Context-Cognizant Completer
 
-<<<<<<< HEAD
 PCCC is an expandable library which can be used to supply a text editor's auto completer with more helpful suggestions based on the document being edited. For example, insertions into a C file containing a reference to stdio.h may show up with suggestions to symbols like `size\_t`. Suggestions will come up based on the contents of the files being referenced. 
-=======
-PCCC is an expanable library which can be used to power a text editor's auto completer and provide more helpful suggestions based on the document being edited. For example, insertions into a C file containing a reference to stdio.h may show up with suggestions to symbols like `size\_t`. PCCC is written in C, and the lexer/parsers it uses are written in Flex and Bison. A plugin is available for Sublime Text in the repository. PCCC is licensed under the GPLv3, and the project is currently in its *very early* alpha stage.
->>>>>>> 2a727a6b70171f3f8e3f963d978f0ca82e9d4e46
 
 PCCC is written in C, and the lexers and parsers it uses are written in Flex and Bison. You can implement PCCC into your program if you are using Linux and have `make`, `gcc`, `bison`, and `flex` installed on your system. You can also use the included Sublime Text plugin if you have those prerequisites and have Sublime Text installed.
 
